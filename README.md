@@ -1,3 +1,6 @@
+## Dokumentacja online
+https://jbackk-lang.github.io/
+
 # topologic
 
 Biblioteka logiki topologicznej dla programistów:
