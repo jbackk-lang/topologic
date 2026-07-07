@@ -1,47 +1,58 @@
-topologic
+# topologic
 Topological Logic for Signals: Twist • Defect • Resonance • J‑Operator
 
-Lekka biblioteka programistyczna w Pythonie, która udostępnia proste operatory topologiczne do analizy sygnałów, danych i zjawisk.
-Zaprojektowana tak, aby była intuicyjna dla programistów, a jednocześnie oparta na solidnych fundamentach topologicznych.
-
-Dokumentacja online
+## Dokumentacja online
 https://jbackk-lang.github.io/
 
-Struktura projektu
-Kod
+---
+
+## Opis
+
+`topologic` to lekka biblioteka programistyczna, która udostępnia cztery operatory topologiczne do analizy sygnałów:
+
+- **twist** – skręt (zmiana kierunku sygnału)
+- **defect** – defekt (skok/anomalia)
+- **resonance** – rezonans (wspólna zmiana wielu sygnałów)
+- **J‑operator** – operator decyzyjny łączący trzy powyższe
+
+Projekt inspirowany TIMDR, Λ–τ–ρ oraz topologią przejść (He → Fe → Og).  
+Celem jest udostępnienie prostych operatorów, które można stosować w:
+
+- analizie sygnałów  
+- ML  
+- finansach  
+- fizyce  
+- chemii  
+- biologii  
+
+---
 topologic/
-    twist.py
-    defect.py
-    resonance.py
-    j_operator.py
+twist.py
+defect.py
+resonance.py
+j_operator.py
 
 examples/
-    j_operator_basic/
-        twist_demo.py
-        defect_demo.py
-        resonance_demo.py
-        j_point_demo.py
+j_operator_basic/
+twist_demo.py
+defect_demo.py
+resonance_demo.py
+j_point_demo.py
 
-    logikal.py
-Opis operatorów
-twist
-Zmiana kierunku sygnału — wykrywa lokalne „skręty” i odwrócenia trendu.
+logikal.py
 
-defect
-Skok / anomalia — wykrywa nagłe odchylenia od lokalnej struktury sygnału.
 
-resonance
-Wspólny kierunek wielu sygnałów — sprawdza, czy sygnały poruszają się zgodnie.
+---
 
-J‑operator
-Operator decyzyjny łączący twist, defect i resonance w jedną odpowiedź.
+## Instalacja (lokalnie)
 
-Instalacja (lokalnie)
-python
+```python
 from topologic.twist import twist
 from topologic.defect import defect
 from topologic.resonance import resonance
 from topologic.j_operator import J
+
+## Struktura repozytorium
 Przykład użycia
 python
 from topologic.twist import twist
@@ -58,164 +69,77 @@ result = Jop(A[0], A[1], B[0], B[1])
 print(result)
 Wynik:
 
-Kod
+json
 {
-  'twist': True/False,
-  'defect': True/False,
-  'resonance': True/False
+  "twist": true/false,
+  "defect": true/false,
+  "resonance": true/false
 }
-Zastosowania
-analiza sygnałów (DSP)
-
-wykrywanie anomalii
-
-modele ML
-
-giełda i rynki
-
-fizyka (przejścia stanów)
-
-chemia (rezonanse)
-
-biologia (redukcja informacji)
-
-Operatorów można używać w dowolnym języku i dowolnym kontekście — działają na zwykłych sekwencjach liczb.
-
-Cel projektu
-Udostępnić programistom prostą, uniwersalną logikę topologiczną, którą można stosować w analizie sygnałów, danych i zjawisk — bez konieczności znajomości pełnej teorii TRM/TIMDR/GIA/FIELDCORE/SENSCORE.
-
 Kontekst topologiczny (opcjonalny)
+Poniżej skrót formalnych podstaw — w wersji ASCII, kompatybilnej z GitHubem.
+
 1. Przestrzeń topologiczna zdarzenia
-𝑇
-=
-(
-𝑉
-,
-𝜏
-)
+Kod
+T = (V, tau)
 gdzie:
 
-𝑉
- — zbiór hitów po TRM/TIMDR/GIA,
+V — zbiór punktów/sygnałów
 
-𝜏
- — topologia generowana przez sąsiedztwo grafowe:
+tau — topologia generowana przez sąsiedztwo grafowe
 
-𝜏
-=
-{
-𝑈
-⊆
-𝑉
-∣
-∀
-𝑣
-𝑖
-∈
-𝑈
-,
-  
-𝑁
-(
-𝑖
-)
-⊆
-𝑈
-}
+Najprostsza konstrukcja:
+
+Kod
+tau = { U ⊆ V | for all v_i in U: N(i) ⊆ U }
 2. TRM — operator topologiczny
-Buduje graf i indukuje topologię.
-Małe zmiany w danych → małe zmiany w topologii.
+Buduje graf z danych i indukuje topologię:
+
+Kod
+TRM : X^N → T
+Własność: małe zmiany w danych → małe zmiany w topologii.
 
 3. TIMDR — zwężanie topologii
-𝜏
-′
-=
-{
-𝑈
-∩
-𝑉
-′
-∣
-𝑈
-∈
-𝜏
-}
-Topologia staje się bardziej spójna.
+Kod
+TIMDR : T → T
+Nowa topologia:
 
+Kod
+tau' = { U ∩ V' | U ∈ tau }
+Własność:
+
+Kod
+tau' ⊆ tau
 4. GIA — homotopia rezonansowa
-Dopasowuje oś rezonansu i filtruje punkty dalekie od niej.
-Redukuje liczbę komponentów spójności.
+Dopasowuje oś rezonansu i filtruje punkty dalekie od niej:
 
+Kod
+r_i = || q_i - (q_i · u) u ||
+Homotopia deformacyjna:
+
+Kod
+H(lambda, v_i) = p_bar + lambda * (q_i · u) u
 5. FIELDCORE — wygładzanie topologii
 Operator Laplace’a na grafie:
 
-𝑔
-=
-(
-1
-−
-𝜆
-)
-𝑓
-+
-𝜆
-𝐿
-𝑓
-Zmniejsza energię Dirichleta → wygładza pole.
+Kod
+g = (1 - lambda) f + lambda L f
+Energia Dirichleta:
 
+Kod
+E(f) = sum_{(i,j) in E} (f_i - f_j)^2
 6. SENSCORE — zmiana metryki
-𝑑
-′
-(
-𝑣
-𝑖
-,
-𝑣
-𝑗
-)
-=
-𝑑
-(
-𝑣
-𝑖
-,
-𝑣
-𝑗
-)
-⋅
-𝑔
-𝑠
-Wpływa na TRM i dalsze operatory.
-
+Kod
+d'(v_i, v_j) = d(v_i, v_j) * g_s
 7. Pipeline
-𝑇
-=
-𝑇
-F
-I
-E
-L
-D
-∘
-𝑇
-G
-I
-A
-∘
-𝑇
-T
-I
-M
-D
-R
-∘
-𝑇
-T
-R
-M
-∘
-𝑆
-Monotoniczny, ciągły, zbieżny.
+Kod
+T = FIELDCORE ∘ GIA ∘ TIMDR ∘ TRM ∘ SENSCORE
+Własności:
+
+monotoniczność
+
+ciągłość
+
+zbieżność
 
 Licencja
 MIT
