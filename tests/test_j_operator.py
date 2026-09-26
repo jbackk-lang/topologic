@@ -70,3 +70,20 @@ def test_window_limits_history_length():
         j.step(float(v), float(v))
     assert len(j._hist_a) <= 3
     assert len(j._hist_b) <= 3
+
+
+def test_j_defect_method_mad_detects_step_in_trend():
+    from topologic import J, defect, resonance, twist
+    Jop = J(twist, defect, resonance, window=30, sigma=2.0, defect_method="mad")
+    out = None
+    for i in range(20):
+        out = Jop.step(float(i), float(i))
+    assert out["defect"] is False
+    out = Jop.step(23.0, 20.0)  # skok +4 w sygnale A przy typowym kroku +1
+    assert out["defect"] is True
+
+
+def test_j_default_defect_method_is_std():
+    from topologic import J, defect, resonance, twist
+    Jop = J(twist, defect, resonance)
+    assert Jop.defect_method == "std"

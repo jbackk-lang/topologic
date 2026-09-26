@@ -48,3 +48,61 @@ def test_sanity_matches_manual_std_computation():
     prev, curr = 10.0, 10.0 + 3 * baseline_std
     assert defect(prev, curr, sigma=2.0, history=history) is True
     assert defect(prev, prev + 0.1 * baseline_std, sigma=2.0, history=history) is False
+
+
+# ---------------------------------------------------------------------------
+# v0.3: metody "mad" i "relative" (zalecenia z projektu TIMeDR-MUZ)
+# ---------------------------------------------------------------------------
+
+def test_default_method_is_unchanged_std():
+    history = [1.0, 2.0, 3.0, 4.0]
+    assert defect(10.0, 12.0, history=history) == defect(10.0, 12.0, history=history, method="std")
+
+
+def test_unknown_method_raises():
+    with pytest.raises(ValueError):
+        defect(1.0, 2.0, history=[1.0, 2.0, 3.0], method="foo")
+
+
+def test_std_misses_step_in_trend_but_mad_detects_it():
+    # Znane ograniczenie "std": porownuje krok z rozrzutem POZIOMOW.
+    # Trend 0..19 ma std ~5.77, wiec skok +4 (typowy krok to +1) nie przekracza 2*std.
+    history = [float(i) for i in range(18)]  # 0..17, prev=18 -> curr=22
+    assert defect(18.0, 22.0, sigma=2.0, history=history, method="std") is False
+    assert defect(18.0, 22.0, sigma=2.0, history=history, method="mad") is True
+    # typowy krok +1 w trendzie nie jest defektem
+    assert defect(18.0, 19.0, sigma=2.0, history=history, method="mad") is False
+
+
+def test_mad_is_robust_to_single_earlier_spike():
+    rng = np.random.default_rng(0)
+    base = list(100.0 + rng.normal(0, 1.0, 30))
+    base[10] += 50.0  # jeden wczesniejszy skok zawyza std krokow, ale nie MAD
+    history, prev = base[:-1], float(base[-1])
+    curr = prev + 8.0
+    assert defect(prev, curr, sigma=3.0, history=history, method="mad") is True
+    assert defect(prev, curr, sigma=3.0, history=history, method="std") is False
+
+
+def test_mad_requires_three_history_points():
+    with pytest.raises(ValueError):
+        defect(1.0, 2.0, history=[1.0, 2.0], method="mad")
+
+
+def test_mad_constant_steps_any_deviation_is_defect():
+    history = [0.0, 1.0, 2.0, 3.0]
+    assert defect(3.0, 4.0, history=history, method="mad") is False
+    assert defect(3.0, 4.5, history=history, method="mad") is True
+
+
+def test_relative_bill_price_rise():
+    # abonament 89 -> 119 zl: +33.7% > 10%
+    assert defect(89.0, 119.0, method="relative", rel_threshold=0.10) is True
+    assert defect(89.0, 92.0, method="relative", rel_threshold=0.10) is False
+
+
+def test_relative_requires_threshold_and_nonzero_prev():
+    with pytest.raises(ValueError):
+        defect(89.0, 119.0, method="relative")
+    with pytest.raises(ValueError):
+        defect(0.0, 5.0, method="relative", rel_threshold=0.10)

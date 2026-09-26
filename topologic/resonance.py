@@ -3,10 +3,16 @@ import numpy as np
 
 def resonance(*signals):
     """
-    Operator rezonansu: True, jesli KAZDY z podanych sygnalow jest sam w
+    Operator rezonansu KIERUNKOWEGO: True, jesli KAZDY z podanych sygnalow jest sam w
     sobie monotoniczny (wszystkie kroki w jedna strone, pomijajac kroki
     zerowe/plateau) ORAZ wszystkie sygnaly zgadzaja sie co do kierunku
     (wszystkie rosna albo wszystkie maleja).
+
+    ZNACZENIE (v0.3): to jest rezonans "kierunkowy" (zgodnosc kierunku,
+    bliski R(t) = mean(sign(S')) z GIA-TIMDR), a NIE rezonans M z Axioms_S
+    (koincydencja >= 3 anomalii w tym samym czasie). Rezonans M jest osobnym
+    operatorem: `resonance_m()`. Nazwa `resonance` zostaje bez zmian, zeby nie
+    lamac istniejacego kodu.
 
     POPRAWKA BLEDU (v0.2): oryginalna wersja przyjmowala JEDNA plaska
     liste wartosci (`resonance(values)`). Dzialalo to poprawnie dla

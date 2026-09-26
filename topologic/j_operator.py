@@ -28,7 +28,15 @@ class J:
     bezposrednio, jesli ktos chce sam zarzadzac wlasna historia.
     """
 
-    def __init__(self, twist_fn, defect_fn, resonance_fn, window=20, sigma=2.0, twist_threshold=0.0):
+    def __init__(self, twist_fn, defect_fn, resonance_fn, window=20, sigma=2.0, twist_threshold=0.0,
+                 defect_method="std", rel_threshold=None):
+        """
+        defect_method (v0.3): "std" (domyslnie, zachowanie v0.2), "mad"
+        (zalecane, odporny z-score kroku) albo "relative" (wymaga
+        rel_threshold). Patrz topologic.defect.defect.
+        """
+        self.defect_method = defect_method
+        self.rel_threshold = rel_threshold
         self.twist = twist_fn
         self.defect = defect_fn
         self.resonance = resonance_fn
@@ -71,11 +79,18 @@ class J:
             twist_b = self.twist(hist_b[-3], prev_b, curr_b, threshold=self.twist_threshold)
 
         defect_a = defect_b = False
-        if len(hist_a) >= 4:  # >=2 punkty bazowej historii + prev + curr
+        # bazowa historia: "std" >= 2 punkty, "mad" >= 3 punkty, "relative" nie potrzebuje
+        min_len = {"std": 4, "mad": 5, "relative": 2}.get(self.defect_method, 4)
+        if len(hist_a) >= min_len:
             baseline_a = hist_a[:-2]
             baseline_b = hist_b[:-2]
-            defect_a = self.defect(prev_a, curr_a, sigma=self.sigma, history=baseline_a)
-            defect_b = self.defect(prev_b, curr_b, sigma=self.sigma, history=baseline_b)
+            kw = dict(sigma=self.sigma, method=self.defect_method, rel_threshold=self.rel_threshold)
+            if self.defect_method == "relative":
+                defect_a = prev_a != 0 and self.defect(prev_a, curr_a, **kw)
+                defect_b = prev_b != 0 and self.defect(prev_b, curr_b, **kw)
+            else:
+                defect_a = self.defect(prev_a, curr_a, history=baseline_a, **kw)
+                defect_b = self.defect(prev_b, curr_b, history=baseline_b, **kw)
 
         resonance = self.resonance([prev_a, curr_a], [prev_b, curr_b])
 

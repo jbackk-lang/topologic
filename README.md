@@ -118,6 +118,42 @@ Wszystkie cztery poprawki mają testy regresyjne w `tests/`, odtwarzające dokł
 
 ---
 
+## Zmiany v0.3 (zgodne wstecz)
+
+Wersja 0.3 dodaje operatory i metody zalecane w projekcie TIMeDR-MUZ. Domyślne zachowanie v0.2 nie zmienia się, więc istniejący kod daje te same wyniki.
+
+**`defect(..., method=...)`** ma trzy metody:
+
+| Metoda | Warunek defektu | Kiedy używać |
+| --- | --- | --- |
+| `"std"` (domyślna, jak w v0.2) | `\|curr-prev\| > sigma * std(history)` | zgodność z istniejącym kodem |
+| `"mad"` (zalecana) | `\|(curr-prev) - median(d)\| > sigma * 1.4826 * MAD(d)`, gdzie `d = diff(history)` | sygnały z trendem i z pojedynczymi wcześniejszymi skokami |
+| `"relative"` | `\|curr-prev\| / \|prev\| > rel_threshold` (próg ustalony z góry) | kwoty o stałej wysokości, np. rachunki |
+
+Znane ograniczenie metody `"std"`: porównuje krok z rozrzutem poziomów historii. W trendzie 0, 1, 2, …, 17 skok z 18 do 22 (zamiast typowego +1) nie jest wykrywany, bo odchylenie standardowe poziomów wynosi około 5,2. Metoda `"mad"` porównuje krok z krokami i wykrywa go (test `test_std_misses_step_in_trend_but_mad_detects_it`).
+
+**`anomaly(value, history, k=3.0)`** to nowa anomalia z Axioms_S w wariancie odpornym: mediana ± k · 1,4826 · MAD historii.
+
+**`resonance_m(flags, min_count=3)`** to rezonans M z Axioms_S: koincydencja co najmniej trzech flag (np. anomalii) w tym samym czasie. To nie jest to samo co `resonance()`:
+
+| Operator | Znaczenie | Pytanie |
+| --- | --- | --- |
+| `resonance(*signals)` | rezonans kierunkowy (bliski R(t) z GIA-TIMDR) | czy wszystkie sygnały idą monotonicznie w tę samą stronę? |
+| `resonance_m(flags)` | rezonans M z Axioms_S | czy co najmniej 3 sygnały mają zdarzenie w tej samej chwili? |
+
+Nazwa `resonance` zostaje bez zmian, żeby nie łamać istniejącego kodu.
+
+**`J(..., defect_method="std", rel_threshold=None)`** przekazuje wybraną metodę do `defect()`. Domyślnie działa jak w v0.2.
+
+```python
+from topologic import anomaly, defect, resonance_m
+
+defect(89.0, 119.0, method="relative", rel_threshold=0.10)      # True, +34%
+defect(18.0, 22.0, history=list(range(18)), method="mad")      # True
+flags = [anomaly(v, h) for v, h in zip(latest_values, histories)]
+resonance_m(flags)                                             # True, gdy >= 3 anomalie naraz
+```
+
 ## Kontekst topologiczny (opcjonalny, koncepcyjny)
 
 > **Uwaga:** poniższy pipeline (TRM/TIMDR/GIA/FIELDCORE/SENSCORE) jest opisem koncepcyjnym/inspiracją teoretyczną, a **nie** czymś zaimplementowanym w kodzie tej biblioteki. Faktyczny, zaimplementowany i przetestowany kod to wyłącznie cztery operatory opisane wyżej (`twist`, `defect`, `resonance`, `J`). Sekcja poniżej dokumentuje zamierzony kierunek/inspirację, nie bieżące API.
